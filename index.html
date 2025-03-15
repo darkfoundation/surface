@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"><head><title>Surface Plotter</title>
+<!-- $z=30*cos($r/20)*cos(($x+$r)/50) -->
+<script>
+function get_plot() {
+    document.getElementById("plot_here").src="black.png";
+    let pic=document.getElementById("pic").selectedOptions[0].text;
+    let dims=pic.split("x"); document.getElementById("plot_here").hidden=false;
+	document.getElementById("plot_here").width=dims[0]; document.getElementById("plot_here").height=dims[1];
+	let t=new Date().valueOf(); let plot=document.getElementById("plot").value;
+	plot=plot.replace(/\s/g, ""); document.getElementById("plot").value=plot;
+	let wire=0; if (document.getElementById("wire").checked) { wire=1; }
+	let res=document.getElementById("res").selectedOptions[0].value;
+	let lite=document.getElementById("lite").selectedIndex;
+	let params="plot="+encodeURIComponent(plot)+"&res="+res+"&wire="+wire+"&lite="+lite+"&pic="+pic+"&t="+t;
+	document.getElementById("plot_here").src="surfplot.php?"+params;
+}
+</script></head>
+<body><div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
+<label>formula:<input type="text" id="plot" size=30></label>&nbsp;&nbsp;
+<label>wireframe:<input type="checkbox" id="wire" checked></label>&nbsp;
+<label>subgrid:<select id="res">
+    <option value="8">8x8</option><option value="4">4x4</option><option value="2">2x2</option>
+</select></label>&nbsp;&nbsp;
+<label>light&nbsp;from:<select id="lite">
+    <option>left</option><option>right</option>
+</select></label>&nbsp;&nbsp;
+<label>image&nbsp;size:<select id="pic">
+    <option>640x480</option><option>800x600</option><option>1024x768</option>
+</select></label>&nbsp;&nbsp;
+<input type="button" value="graph it!" onclick="get_plot();"><br/>
+<img id="plot_here" src="black.png" width="1" height="1" alt="surface graph" hidden>
+</div></body></html>
