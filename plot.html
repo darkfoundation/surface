@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Surface Plotter</title>
+        <script>
+            let fn = 'z=0';
+            let wire = 0;
+            let lite = 1;
+            let pc = '640x480';
+        </script>
+    </head>
+    <body onload="getPlot();">
+        <div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
+            <label>formula:<input type="text" id="plot" size=30 style="border: 1px solid #000; border-radius: 5px; padding: 1px 5px;" value="z=0"></label>&nbsp;&nbsp;
+            <label>wireframe:<input type="checkbox" id="wire" checked style="border: 1px solid #000"></label>&nbsp;&nbsp;
+            <label>light&nbsp;from:<select id="lite" style="border: 1px solid #000">
+                <option>left</option>
+                <option>right</option>
+            </select></label>&nbsp;&nbsp;
+            <label>image&nbsp;size:<select id="pic" style="border: 1px solid #000">
+                <option>640x480</option>
+                <option>800x600</option>
+                <option>1024x768</option>
+            </select></label>&nbsp;&nbsp;
+            <input type="button" value="graph it!" style="border: 1px solid #000; border-radius: 5px;" onclick="getPlot();"><br/>
+            <canvas id="3d_plot" width="640" height="480"></canvas>
+        </div>
+        <script>
+            const plotCanvas = document.getElementById("3d_plot");
+            
+            //set up functions
+            function plot_z(x, y) {
+                let r = Math.sqrt(x*x+y*y);
+                return eval(fn);
+            }
+    
+            function u(x, y, wd) { 
+                let sc = wd/640;
+                return wd/2+x*sc-y*sc/2;
+            }
+    
+            function v(x, y, ht) { 
+                let sc = ht/480;
+                return ht/2-plot_z(x, y)*sc-y*sc/2;
+            }
+
+            function getPlot() {
+                fn = document.getElementById("plot").value;
+                wire = (document.getElementById("wire").checked)?(1):(0);
+                lite = (document.getElementById("lite").value == 'left')?(0):(1);
+                pc = document.getElementById("pic").value;
+
+                switch(pc) {
+                    case '640x480':
+                        plotCanvas.width = 640;
+                        plotCanvas.height = 480;
+                        break;
+                    case '800x600':
+                        plotCanvas.width = 800;
+                        plotCanvas.height = 600;
+                        break;
+                    case '1024x768':
+                        plotCanvas.width = 1024;
+                        plotCanvas.height = 768;
+                        break;
+                }
+
+            //set up variables
+                let f = (wire == 0)?(2):(8);
+                let o = (lite == 0)?(-.5):(.5);
+                let p = (lite == 0)?(0):(-1);
+                let q = 1;
+
+                //set up canvas
+                let wd = plotCanvas.clientWidth;
+                let ht = plotCanvas.clientHeight;
+                context = plotCanvas.getContext("2d");
+                context.fillStyle = "black";
+                context.fillRect(0, 0, wd, ht);
+
+                context.font = "16px Monospace";
+                context.textAlign = "center";
+                context.fillStyle = "white";
+                cleanFn = fn.replace(/Math./g, "");
+                context.fillText(cleanFn, wd/2, ht-10);
+
+                //set up points
+                let all_u = [];
+                let all_v = [];
+                let all_z = [];
+                for (let x = 200; x >= -200; x-=f) {
+                    let u_row = [];
+                    let v_row = [];
+                    let z_row = [];
+                    for (let y = 200; y >= -200; y-=f) {
+                        context.strokeStyle = 'white';
+                        u_row.push(u(x, y, wd));
+                        v_row.push(v(x, y, ht));
+                        z_row.push(plot_z(x, y));
+                    }
+                    all_u.push(u_row);
+                    all_v.push(v_row);
+                    all_z.push(z_row);
+                }
+
+                //set up surfaces
+                let w = Math.sqrt(o*o+p*p+q*q);
+                let pal_all = [];
+                let k = f*f;
+                for (let x = 200; x > -200; x-=f) {
+                    let pal_row = [];
+                    let m = (200-x)/f;
+                    for (let y = 200; y > -200; y-=f) {
+                        let n = (200-y)/f;
+                        let i = f*(all_z[m+1][n]-all_z[m][n]);
+                        let j = f*(all_z[m][n+1]-all_z[m][n]);
+                        let l = (i*o+j*p+k*q)/Math.sqrt(i*i+j*j+k*k)/w;
+                        //let l = (i*(o-x)+j*(p-y)+k*(q-all_z[m][n]))/Math.sqrt(i*i+j*j+k*k)/w;
+                        let c = (l >= 0)?(Math.round(253*l+1)):(1);
+                        pal_row.push(c);
+                    }
+                    pal_all.push(pal_row);
+                }
+
+                //do plot
+                for (let t = 0; t < all_v.length-1; t++) {
+                    for (let s = 0; s < all_u.length-1; s++) {
+                        context.beginPath();
+                        context.moveTo(all_u[s][t], all_v[s][t]);
+                        context.lineTo(all_u[s][t+1], all_v[s][t+1]);
+                        context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
+                        context.lineTo(all_u[s+1][t], all_v[s+1][t]);
+                        context.closePath();
+                        context.lineWidth = 1;
+                        let clr = 'rgb('+pal_all[s][t]+', '+pal_all[s][t]+', '+pal_all[s][t]+')';
+                        context.strokeStyle = clr;
+                        context.stroke();
+                        if (wire == 0) {
+                            context.fillStyle = clr;
+                            context.fill();
+                        }
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>
