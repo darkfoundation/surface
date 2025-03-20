@@ -6,21 +6,35 @@
     </head>
     <body onload="getPlot();">
         <div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
-            <label>function(x,y,r):&nbsp;<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px;" value="z=0"></label>&nbsp;&nbsp;
-            <label>render:&nbsp;<select id="wire" style="border: 1px solid #000">
-                <option value="0">wireframe only</option>
-                <option value="1">wireframe solid</option>
-                <option value="2">surface</option>
-            </select></label>&nbsp;&nbsp;
-            <label>light&nbsp;from:&nbsp;<select id="lite" style="border: 1px solid #000">
-                <option>left</option>
-                <option>right</option>
-            </select></label>&nbsp;&nbsp;
-            <label>image&nbsp;size:&nbsp;<select id="pic" style="border: 1px solid #000">
-                <option value="0">640x480</option>
-                <option value="1">800x600</option>
-                <option value="2">1024x768</option>
-            </select></label>&nbsp;&nbsp;
+            <label>function:&nbsp;z(x,y,r)=
+                <input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px;" value="0">
+            </label>&nbsp;
+            <label>render:
+                <select id="wire" style="border: 1px solid #000">
+                    <option value="0">wireframe only</option>
+                    <option value="1">wireframe solid</option>
+                    <option value="2">surface</option>
+                </select>
+            </label>&nbsp;&nbsp;
+            <label>resolution:
+                <select id="res" style="border: 1px solid #000">
+                    <option value="2">low</option>
+                    <option value="1">high</option>
+                </select>
+            </label>&nbsp;
+            <label>light&nbsp;from:
+                <select id="lite" style="border: 1px solid #000">
+                    <option value="0">left</option>
+                    <option value="1">right</option>
+                </select>
+            </label>&nbsp;
+            <label>image&nbsp;size:
+                <select id="pic" style="border: 1px solid #000">
+                    <option value="0">640x480</option>
+                    <option value="1">800x600</option>
+                    <option value="2">1024x768</option>
+                </select>
+            </label>&nbsp;
             <input type="button" value="graph it!" style="border: 1px solid #000;" onclick="getPlot();"><br/>
             <canvas id="3d_plot" width="640" height="480"></canvas>
         </div>
@@ -43,7 +57,7 @@
                     }
                 }
             }
-    
+
             function u(x, y, wd) { 
                 let sc = wd/640;
                 return wd/2+x*sc-y*sc/2;
@@ -55,19 +69,20 @@
             }
 
             function getPlot() {
-                fn = document.getElementById("plot").value;
-                wire = document.getElementById("wire").value;
+                fn = document.getElementById("plot").value.toLowerCase();
+                let res = document.getElementById("res").value;
+                let wire = document.getElementById("wire").value;
                 switch(wire) {
                     case '0':
                     case '1':
-                        f = 8;
+                        f = 5*res;
                         break;
                     case '2':
-                        f = 1;
+                        f = (res == 2)?(5):(1);
                         break;
                 }
-                lite = (document.getElementById("lite").value == 'left')?(0):(1);
-                pc = document.getElementById("pic").value;
+                let lite = document.getElementById("lite").value;
+                let pc = document.getElementById("pic").value;
                 switch(pc) {
                     case '0':
                         plotCanvas.width = 640;
@@ -83,7 +98,7 @@
                         break;
                 }
 
-            //set up variables
+                //set up variables
                 let o = (lite == 0)?(-.5):(.5);
                 let p = (lite == 0)?(0):(-1);
                 let q = 1;
@@ -113,6 +128,7 @@
                     all_z.push(z_row);
                 }
 
+                //output function or error
                 context.font = "16px Monospace";
                 context.textAlign = "center";
                 context.fillStyle = "white";
@@ -120,7 +136,8 @@
                     context.fillText("FUNCTION ERROR!", wd/2, ht/2-5);
                 } else {
                     cleanFn = fn.replace(/Math./g, "");
-                    context.fillText(cleanFn, wd/2, ht-10);
+                    cleanFn0 = (cleanFn.substring(0,2) == 'z=')?(cleanFn):('z=' + cleanFn);
+                    context.fillText(cleanFn0, wd/2, ht-10);
 
                     //set up surfaces
                     let w = Math.sqrt(o*o+p*p+q*q);
@@ -141,43 +158,32 @@
                     }
 
                     //do plot
+                    context.lineWidth = 1;
                     for (let t = 0; t < all_v.length-1; t++) {
                         for (let s = 0; s < all_u.length-1; s++) {
+                            let clr = 'rgb('+pal_all[s][t]+' '+pal_all[s][t]+' '+pal_all[s][t]+')';
                             context.beginPath();
-                            if (wire > 0) {
-                                context.moveTo(all_u[s][t], all_v[s][t]);
-                                context.lineTo(all_u[s][t+1], all_v[s][t+1]);
-                                context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
-                                context.lineTo(all_u[s+1][t], all_v[s+1][t]);
-                                context.closePath();
-                            } else {
-                                context.moveTo(all_u[s+1][t], all_v[s+1][t]);
-                                context.lineTo(all_u[s][t], all_v[s][t]);
-                                context.lineTo(all_u[s][t+1], all_v[s][t+1]);
-                                if (s == all_u.length-2) {
-                                    context.moveTo(all_u[s+1][t], all_v[s+1][t]);
-                                    context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
-                                }
-                            }
-                            if (wire == 0 && t == all_v.length-2) {
-                                context.moveTo(all_u[s][t+1], all_v[s][t+1]);
-                                context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
-                            }
-
-                            let clr = 'rgb('+pal_all[s][t]+', '+pal_all[s][t]+', '+pal_all[s][t]+')';
+                            context.moveTo(all_u[s][t], all_v[s][t]);
+                            context.lineTo(all_u[s][t+1], all_v[s][t+1]);
+                            context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
+                            context.lineTo(all_u[s+1][t], all_v[s+1][t]);
+                            context.closePath();
                             context.strokeStyle = clr;
-                            context.lineWidth = 1;
                             switch(wire) {
+                                case '0':
+                                    context.stroke();
+                                    break;
                                 case '1':
                                     context.fillStyle = 'black';
                                     context.fill();
+                                    context.stroke();
                                     break;
                                 case '2':
                                     context.fillStyle = clr;
                                     context.fill();
+                                    context.stroke();
                                     break;
                             }
-                            context.stroke();
                         }
                     }
                 }
