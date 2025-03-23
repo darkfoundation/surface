@@ -1,33 +1,197 @@
 <!DOCTYPE html>
-<html lang="en"><head><title>Surface Plotter</title>
-<!-- $z=30*cos($r/20)*cos(($x+$r)/50) -->
-<script>
-function get_plot() {
-    document.getElementById("plot_here").src="black.png";
-    let pic=document.getElementById("pic").selectedOptions[0].text;
-    let dims=pic.split("x"); document.getElementById("plot_here").hidden=false;
-	document.getElementById("plot_here").width=dims[0]; document.getElementById("plot_here").height=dims[1];
-	let t=new Date().valueOf(); let plot=document.getElementById("plot").value;
-	plot=plot.replace(/\s/g, ""); document.getElementById("plot").value=plot;
-	let wire=0; if (document.getElementById("wire").checked) { wire=1; }
-	let res=document.getElementById("res").selectedOptions[0].value;
-	let lite=document.getElementById("lite").selectedIndex;
-	let params="plot="+encodeURIComponent(plot)+"&res="+res+"&wire="+wire+"&lite="+lite+"&pic="+pic+"&t="+t;
-	document.getElementById("plot_here").src="surfplot.php?"+params;
-}
-</script></head>
-<body><div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
-<label>formula:<input type="text" id="plot" size=30></label>&nbsp;&nbsp;
-<label>wireframe:<input type="checkbox" id="wire" checked></label>&nbsp;
-<label>subgrid:<select id="res">
-    <option value="8">8x8</option><option value="4">4x4</option><option value="2">2x2</option>
-</select></label>&nbsp;&nbsp;
-<label>light&nbsp;from:<select id="lite">
-    <option>left</option><option>right</option>
-</select></label>&nbsp;&nbsp;
-<label>image&nbsp;size:<select id="pic">
-    <option>640x480</option><option>800x600</option><option>1024x768</option>
-</select></label>&nbsp;&nbsp;
-<input type="button" value="graph it!" onclick="get_plot();"><br/>
-<img id="plot_here" src="black.png" width="1" height="1" alt="surface graph" hidden>
-</div></body></html>
+<html>
+	<head>
+		<title>Surface Plotter</title>
+		<script>const { PI, abs, ceil, floor, max, min, pow, random, round, sqrt, sin, cos, tan, log, exp } = Math;</script>
+	</head>
+	<body onload="getPlot();">
+		<div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
+			<label>function:&nbsp;z(x,y,r)=
+				<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px; margin-left: -3px;" value="0">
+			</label>&nbsp;
+			<label>render:
+				<select id="wire" style="border: 1px solid #000">
+					<option value="0">wireframe only</option>
+					<option value="1">wireframe solid</option>
+					<option value="2">surface</option>
+				</select>
+			</label>&nbsp;&nbsp;
+			<label>resolution:
+				<select id="res" style="border: 1px solid #000">
+					<option value="2">low</option>
+					<option value="1">high</option>
+				</select>
+			</label>&nbsp;
+			<label>light&nbsp;from:
+				<select id="lite" style="border: 1px solid #000">
+					<option value="0">left</option>
+					<option value="1">right</option>
+				</select>
+			</label>&nbsp;
+			<label>image&nbsp;size:
+				<select id="pic" style="border: 1px solid #000">
+					<option value="0">640x480</option>
+					<option value="1">800x600</option>
+					<option value="2">1024x768</option>
+				</select>
+			</label>&nbsp;
+			<input type="button" value="graph it!" style="border: 1px solid #000;" onclick="getPlot();"><br/>
+			<canvas id="3d_plot" width="640" height="480"></canvas>
+		</div>
+		<script>
+			const plotCanvas = document.getElementById("3d_plot");
+			let errorHit = false;
+			let f = 8;
+			let wd = plotCanvas.clientWidth;
+			let ht = plotCanvas.clientHeight;
+			
+			//set up functions
+			function plot_z(x, y) {
+				let r = Math.sqrt(x*x+y*y);
+				try {
+					errorHit = false;
+					let result = eval(fn);
+				} catch {
+					errorHit = true;
+				} finally {
+					if (errorHit == false) {
+						return eval(fn);
+					}
+				}
+			}
+
+			function u(x, y, wd) { 
+				let sc = wd/640;
+				return wd/2+x*sc-y*sc/2;
+			}
+	
+			function v(x, y, ht) { 
+				let sc = ht/480;
+				return ht/2-plot_z(x, y)*sc-y*sc/2;
+			}
+
+			function getPlot() {
+				fn = document.getElementById("plot").value.toLowerCase();
+				let res = document.getElementById("res").value;
+				let wire = document.getElementById("wire").value;
+				if (wire == 2) {
+					f = (res == 2)?(5):(1);
+				} else {
+					f = 5*res;
+				}
+				let lite = document.getElementById("lite").value;
+				let pc = document.getElementById("pic").value;
+				switch(pc) {
+					case '0':
+						wd = 640;
+						ht = 480;
+						break;
+					case '1':
+						wd = 800;
+						ht = 600;
+						break;
+					case '2':
+						wd = 1024;
+						ht = 768;
+						break;
+				}
+
+				//set up variables
+				let o = (lite == 0)?(-.5):(.5);
+				let p = (lite == 0)?(0):(-1);
+				let q = 1;
+
+				//set up canvas
+				plotCanvas.width = wd;
+				plotCanvas.height = ht;
+				context = plotCanvas.getContext("2d");
+				context.fillStyle = "black";
+				context.fillRect(0, 0, wd, ht);
+
+				//set up points
+				let all_u = [];
+				let all_v = [];
+				let all_z = [];
+				for (let x = 200; x >= -200; x-=f) {
+					let u_row = [];
+					let v_row = [];
+					let z_row = [];
+					for (let y = 200; y >= -200; y-=f) {
+						u_row.push(u(x, y, wd));
+						v_row.push(v(x, y, ht));
+						z_row.push(plot_z(x, y));
+					}
+					all_u.push(u_row);
+					all_v.push(v_row);
+					all_z.push(z_row);
+				}
+
+				//output function or error
+				context.font = "16px Monospace";
+				context.textAlign = "center";
+				context.fillStyle = "white";
+				if (errorHit) {
+					context.fillText("FUNCTION ERROR!", wd/2, ht/2-5);
+				} else {
+					cleanFn = fn.replace(/Math./g, "");
+					cleanFn0 = (cleanFn.substring(0,2) == 'z=')?(cleanFn):('z=' + cleanFn);
+					context.fillText(cleanFn0, wd/2, ht-10);
+
+					//set up surfaces
+					let w = Math.sqrt(o*o+p*p+q*q);
+					let pal_all = [];
+					let k = f*f;
+					for (let x = 200; x > -200; x-=f) {
+						let pal_row = [];
+						let m = (200-x)/f;
+						for (let y = 200; y > -200; y-=f) {
+							let n = (200-y)/f;
+							let i = f*(all_z[m+1][n]-all_z[m][n]);
+							let j = f*(all_z[m][n+1]-all_z[m][n]);
+							let l = (i*o+j*p+k*q)/Math.sqrt(i*i+j*j+k*k)/w;
+							let c = (l >= 0)?(Math.round(253*l+1)):(1);
+							pal_row.push(c);
+						}
+						pal_all.push(pal_row);
+					}
+
+					//do plot
+					context.lineWidth = 1;
+					for (let s = 0; s < all_u.length-1; s++) {
+						for (let t = 0; t < all_v.length-1; t++) {
+							let clr = 'rgb('+pal_all[s][t]+', '+pal_all[s][t]+', '+pal_all[s][t]+')';
+							context.strokeStyle = clr;
+							context.beginPath();
+							context.moveTo(all_u[s][t+1], all_v[s][t+1]);
+							context.lineTo(all_u[s][t], all_v[s][t]);
+							context.lineTo(all_u[s+1][t], all_v[s+1][t]);
+							if (wire > 0) {
+								context.fillStyle = (wire == 2)?(clr):('black');
+								context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
+								context.closePath();
+								context.fill();
+								context.beginPath();
+								context.moveTo(all_u[s][t+1], all_v[s][t+1]);
+								context.lineTo(all_u[s][t], all_v[s][t]);
+								context.lineTo(all_u[s+1][t], all_v[s+1][t]);
+							}
+							context.stroke();
+							if (t == all_v.length-2 || wire == 2) {
+								context.beginPath();
+								context.moveTo(all_u[s+1][t+1], all_v[s+1][t+1]);
+								context.lineTo(all_u[s][t+1], all_v[s][t+1]);
+								context.stroke();
+							}
+							if (s == all_u.length-2 || wire == 2) {
+								context.beginPath();
+								context.moveTo(all_u[s+1][t], all_v[s+1][t]);
+								context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
+								context.stroke();
+							}
+						}
+					}
+				}
+			}
+		</script>
+	</body>
+</html>
