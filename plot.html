@@ -7,7 +7,7 @@
 	<body onload="getPlot();">
 		<div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
 			<label>function:&nbsp;z(x,y,r)=
-				<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px;" value="0">
+				<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px; margin-left: -3px;" value="0">
 			</label>&nbsp;
 			<label>render:
 				<select id="wire" style="border: 1px solid #000">
@@ -176,13 +176,13 @@
 								context.lineTo(all_u[s+1][t], all_v[s+1][t]);
 							}
 							context.stroke();
-							if (t == all_v.length-2) {
+							if (t == all_v.length-2 || wire == 2) {
 								context.beginPath();
 								context.moveTo(all_u[s+1][t+1], all_v[s+1][t+1]);
 								context.lineTo(all_u[s][t+1], all_v[s][t+1]);
 								context.stroke();
 							}
-							if (s == all_u.length-2) {
+							if (s == all_u.length-2 || wire == 2) {
 								context.beginPath();
 								context.moveTo(all_u[s+1][t], all_v[s+1][t]);
 								context.lineTo(all_u[s+1][t+1], all_v[s+1][t+1]);
