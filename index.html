@@ -1,41 +1,36 @@
 <!DOCTYPE html>
-<html>
+<!-- favorite function: 25*cos(r/16)*cos((x+r)/43) -->
+<html lang="en">
 	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>Surface Plotter</title>
 		<script>const { PI, abs, ceil, floor, max, min, pow, random, round, sqrt, sin, cos, tan, log, exp } = Math;</script>
-	</head>
+		<style type="text/css">
+			#base { width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap; line-height: 200%; }
+		</style>
+	</head>		
 	<body onload="getPlot();">
-		<div style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap">
-			<label>function:&nbsp;z(x,y,r)=
-				<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px; margin-left: -3px;" value="0">
-			</label>&nbsp;
-			<label>render:
-				<select id="wire" style="border: 1px solid #000">
-					<option value="0">wireframe only</option>
-					<option value="1">wireframe solid</option>
-					<option value="2">surface</option>
-				</select>
-			</label>&nbsp;&nbsp;
-			<label>resolution:
-				<select id="res" style="border: 1px solid #000">
-					<option value="2">low</option>
-					<option value="1">high</option>
-				</select>
-			</label>&nbsp;
-			<label>light&nbsp;from:
-				<select id="lite" style="border: 1px solid #000">
-					<option value="0">left</option>
-					<option value="1">right</option>
-				</select>
-			</label>&nbsp;
-			<label>image&nbsp;size:
-				<select id="pic" style="border: 1px solid #000">
-					<option value="0">640x480</option>
-					<option value="1">800x600</option>
-					<option value="2">1024x768</option>
-				</select>
-			</label>&nbsp;
-			<input type="button" value="graph it!" style="border: 1px solid #000;" onclick="getPlot();"><br/>
+		<div id="base">
+			<label>function:&nbsp;z(x,y,r)=&nbsp;<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px; margin-left: -3px;" value="0"></label>&nbsp;
+			<label>image&nbsp;size:<select id="pic" style="border: 1px solid #000">
+				<option value="0">640x480</option>
+				<option value="1">800x600</option>
+				<option value="2">1024x768</option>
+				</select></label>&nbsp;
+			<input type="button" value="graph it!" style="border: 1px solid #000;" onclick="getPlot();"><br />
+			<label>render:<select id="wire" style="border: 1px solid #000">
+				<option value="0">wireframe only</option>
+				<option value="1">wireframe solid</option>
+				<option value="2">surface</option>
+				</select></label>&nbsp;&nbsp;
+			<label>resolution:<select id="res" style="border: 1px solid #000">
+				<option value="2">low</option>
+				<option value="1">high</option>
+				</select></label>&nbsp;
+			<label>light&nbsp;from:<select id="lite" style="border: 1px solid #000">
+				<option value="0">left</option>
+				<option value="1">right</option>
+			</select></label>&nbsp;<br />
 			<canvas id="3d_plot" width="640" height="480"></canvas>
 		</div>
 		<script>
@@ -83,16 +78,13 @@
 				let pc = document.getElementById("pic").value;
 				switch(pc) {
 					case '0':
-						wd = 640;
-						ht = 480;
+						wd = 640; ht = 480;
 						break;
 					case '1':
-						wd = 800;
-						ht = 600;
+						wd = 800; ht = 600;
 						break;
 					case '2':
-						wd = 1024;
-						ht = 768;
+						wd = 1024; ht = 768;
 						break;
 				}
 
@@ -127,7 +119,8 @@
 				}
 
 				//output function or error
-				context.font = "16px Monospace";
+				let fontSz = 11*ht/480;
+				context.font =  fontSz + "px Monospace";
 				context.textAlign = "center";
 				context.fillStyle = "white";
 				if (errorHit) {
