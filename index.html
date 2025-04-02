@@ -5,11 +5,8 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>Surface Plotter</title>
 		<script>const { PI, abs, ceil, floor, max, min, pow, random, round, sqrt, sin, cos, tan, log, exp } = Math;</script>
-		<style type="text/css">
-			#base { width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap; line-height: 200%; }
-		</style>
 	</head>		
-	<body onload="getPlot();">
+	<body onload="getPlot();" style="width: 100%; text-align: center; font-family: verdana,sans-serif; font-size: 12px; white-space: nowrap; line-height: 200%;">
 		<div id="base">
 			<label>function:&nbsp;z(x,y,r)=&nbsp;<input type="text" id="plot" size=35 style="border: 1px solid #000; padding: 1px 5px; margin-left: -3px;" value="0"></label>&nbsp;
 			<label>image&nbsp;size:<select id="pic" style="border: 1px solid #000">
@@ -35,8 +32,7 @@
 		</div>
 		<script>
 			const plotCanvas = document.getElementById("3d_plot");
-			let errorHit = false;
-			let f = 8;
+			let errorHit = false; let f = 8;
 			let wd = plotCanvas.clientWidth;
 			let ht = plotCanvas.clientHeight;
 			
@@ -101,25 +97,19 @@
 				context.fillRect(0, 0, wd, ht);
 
 				//set up points
-				let all_u = [];
-				let all_v = [];
-				let all_z = [];
+				let all_u = []; let all_v = []; let all_z = [];
 				for (let x = 200; x >= -200; x-=f) {
-					let u_row = [];
-					let v_row = [];
-					let z_row = [];
+					let u_row = []; let v_row = []; let z_row = [];
 					for (let y = 200; y >= -200; y-=f) {
 						u_row.push(u(x, y, wd));
 						v_row.push(v(x, y, ht));
 						z_row.push(plot_z(x, y));
 					}
-					all_u.push(u_row);
-					all_v.push(v_row);
-					all_z.push(z_row);
+					all_u.push(u_row); all_v.push(v_row); all_z.push(z_row);
 				}
 
 				//output function or error
-				let fontSz = 11*ht/480;
+				let fontSz = Math.floor(11*ht/480);
 				context.font =  fontSz + "px Monospace";
 				context.textAlign = "center";
 				context.fillStyle = "white";
@@ -132,8 +122,7 @@
 
 					//set up surfaces
 					let w = Math.sqrt(o*o+p*p+q*q);
-					let pal_all = [];
-					let k = f*f;
+					let pal_all = []; let k = f*f;
 					for (let x = 200; x > -200; x-=f) {
 						let pal_row = [];
 						let m = (200-x)/f;
